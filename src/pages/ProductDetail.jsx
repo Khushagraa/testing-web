@@ -4,6 +4,7 @@ import { FiShoppingCart, FiStar, FiArrowLeft, FiPlus, FiMinus, FiCheck } from 'r
 import products from '../data/products'
 import { useCart } from '../context/CartContext'
 import ProductCard from '../components/ProductCard'
+import { handleImageError } from '../utils/imageFallback'
 
 export default function ProductDetail() {
   const { id } = useParams()
@@ -59,6 +60,7 @@ export default function ProductDetail() {
           <img
             src={product.image}
             alt={product.name}
+            onError={handleImageError}
             className="w-full h-96 lg:h-full object-cover"
           />
         </div>

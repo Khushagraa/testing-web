@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { FiTrash2, FiPlus, FiMinus } from 'react-icons/fi'
 import { useCart } from '../context/CartContext'
+import { handleImageError } from '../utils/imageFallback'
 
 export default function CartItem({ item }) {
   const { updateQuantity, removeFromCart } = useCart()
@@ -12,6 +13,7 @@ export default function CartItem({ item }) {
         <img
           src={item.image}
           alt={item.name}
+          onError={handleImageError}
           className="w-20 h-20 object-cover rounded-xl border border-gray-100"
         />
       </Link>

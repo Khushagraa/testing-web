@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { FiShoppingCart, FiStar } from 'react-icons/fi'
 import { useCart } from '../context/CartContext'
+import { handleImageError } from '../utils/imageFallback'
 
 export default function ProductCard({ product }) {
   const { addToCart } = useCart()
@@ -22,6 +23,7 @@ export default function ProductCard({ product }) {
         <img
           src={product.image}
           alt={product.name}
+          onError={handleImageError}
           className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
         />
       </Link>

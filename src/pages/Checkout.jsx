@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { FiCheckCircle, FiCreditCard } from 'react-icons/fi'
 import { FaPaypal } from 'react-icons/fa'
 import { useCart } from '../context/CartContext'
+import { handleImageError } from '../utils/imageFallback'
 
 const TAX_RATE = 0.1
 
@@ -240,7 +241,12 @@ export default function Checkout() {
               <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
                 {cartItems.map((item) => (
                   <div key={item.id} className="flex items-center gap-3">
-                    <img src={item.image} alt={item.name} className="w-12 h-12 object-cover rounded-lg flex-shrink-0" />
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      onError={handleImageError}
+                      className="w-12 h-12 object-cover rounded-lg flex-shrink-0"
+                    />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-800 line-clamp-1">{item.name}</p>
                       <p className="text-xs text-gray-400">Qty: {item.quantity}</p>
