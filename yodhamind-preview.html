@@ -332,7 +332,7 @@
     .tile.match  { background: rgba(52,211,153,0.15); border-color: rgba(52,211,153,0.4); }
 
     .game-stats { display: flex; gap: 18px; flex-wrap: wrap; }
-    .game-stat  { }
+
     .game-stat-val   { font-size: 1.2rem; font-weight: 700; }
     .game-stat-label { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
 
@@ -1196,9 +1196,9 @@ function bookSlot(el) {
 
     var pairs = [...EMOJIS, ...EMOJIS];
     // Fisher-Yates shuffle
-    for (var i = pairs.length - 1; i > 0; i--) {
-      var j = Math.floor(Math.random() * (i + 1));
-      var tmp = pairs[i]; pairs[i] = pairs[j]; pairs[j] = tmp;
+    for (var currentIndex = pairs.length - 1; currentIndex > 0; currentIndex--) {
+      var randomIndex = Math.floor(Math.random() * (currentIndex + 1));
+      var temp = pairs[currentIndex]; pairs[currentIndex] = pairs[randomIndex]; pairs[randomIndex] = temp;
     }
     grid = pairs;
     flipped = [];
@@ -1286,7 +1286,7 @@ window.addPost = function () {
 };
 
 function escHtml(str) {
-  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
 /* ── Like toggle ────────────────────────────────────────────── */
