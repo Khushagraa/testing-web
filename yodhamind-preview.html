@@ -1,0 +1,1336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>YodhaMind · Preview</title>
+  <style>
+    /* ── Design Tokens ─────────────────────────────────────── */
+    :root {
+      --bg:          #07070a;
+      --bg2:         #0d0d12;
+      --panel:       rgba(18, 18, 26, 0.72);
+      --panel-hover: rgba(28, 28, 40, 0.85);
+      --stroke:      rgba(255,255,255,0.07);
+      --stroke-glow: rgba(80,220,255,0.35);
+      --glow:        #3ef0ff;
+      --glow-soft:   rgba(62,240,255,0.12);
+      --glow-med:    rgba(62,240,255,0.22);
+      --accent:      #a78bfa;
+      --accent-soft: rgba(167,139,250,0.12);
+      --green:       #34d399;
+      --green-soft:  rgba(52,211,153,0.12);
+      --amber:       #fbbf24;
+      --amber-soft:  rgba(251,191,36,0.12);
+      --text:        #f1f5f9;
+      --muted:       #6b7280;
+      --muted2:      #9ca3af;
+      --nav-w:       220px;
+      --radius:      16px;
+    }
+
+    /* ── Reset ─────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      font-size: 15px;
+      line-height: 1.55;
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* ── Animated Background ───────────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background:
+        radial-gradient(ellipse 60% 40% at 20% 10%, rgba(62,240,255,0.04) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 50% at 80% 80%, rgba(167,139,250,0.04) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 30% at 50% 50%, rgba(0,0,0,0) 0%, var(--bg) 100%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Glass mixin ───────────────────────────────────────── */
+    .glass {
+      background: var(--panel);
+      border: 1px solid var(--stroke);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border-radius: var(--radius);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.45);
+    }
+    .glass:hover { border-color: rgba(255,255,255,0.1); }
+
+    /* ── Sidebar ────────────────────────────────────────────── */
+    .sidebar {
+      width: var(--nav-w);
+      min-height: 100vh;
+      position: fixed; left: 0; top: 0;
+      background: rgba(8,8,14,0.92);
+      border-right: 1px solid var(--stroke);
+      backdrop-filter: blur(24px);
+      display: flex; flex-direction: column;
+      padding: 28px 16px 24px;
+      z-index: 100;
+      transition: transform 0.3s ease;
+    }
+
+    .logo {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 32px; padding: 0 4px;
+    }
+    .logo-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--glow) 0%, var(--accent) 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0;
+      box-shadow: 0 0 16px rgba(62,240,255,0.3);
+    }
+    .logo-text { font-size: 1.05rem; font-weight: 700; letter-spacing: -.02em; }
+    .logo-sub  { font-size: 0.7rem; color: var(--muted); letter-spacing: .04em; text-transform: uppercase; margin-top: 1px; }
+
+    .nav { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+    .nav-item {
+      display: flex; align-items: center; gap: 11px;
+      padding: 10px 12px; border-radius: 12px;
+      cursor: pointer; border: 1px solid transparent;
+      color: var(--muted2); font-size: 0.9rem;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+    .nav-item:hover { background: var(--glow-soft); color: var(--text); border-color: var(--stroke-glow); }
+    .nav-item.active {
+      background: var(--glow-soft);
+      color: var(--glow);
+      border-color: var(--stroke-glow);
+      font-weight: 500;
+    }
+    .nav-item .nav-icon { font-size: 1.1rem; width: 22px; text-align: center; }
+
+    .sidebar-footer {
+      border-top: 1px solid var(--stroke);
+      padding-top: 16px;
+    }
+    .user-pill {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .user-pill:hover { background: var(--glow-soft); }
+    .avatar {
+      width: 32px; height: 32px; border-radius: 999px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--glow) 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.8rem; font-weight: 600; flex-shrink: 0;
+    }
+    .user-name  { font-size: 0.88rem; font-weight: 500; }
+    .user-badge {
+      font-size: 0.68rem; color: var(--green); background: var(--green-soft);
+      border: 1px solid rgba(52,211,153,0.2);
+      border-radius: 99px; padding: 1px 7px; margin-top: 2px;
+    }
+
+    /* ── Mobile top bar ─────────────────────────────────────── */
+    .topbar {
+      display: none;
+      position: fixed; top: 0; left: 0; right: 0;
+      height: 60px;
+      background: rgba(8,8,14,0.95);
+      border-bottom: 1px solid var(--stroke);
+      backdrop-filter: blur(20px);
+      z-index: 200;
+      align-items: center; justify-content: space-between;
+      padding: 0 18px;
+    }
+    .topbar .logo-text { font-size: 1rem; }
+    .hamburger {
+      background: none; border: 1px solid var(--stroke);
+      color: var(--text); padding: 6px 9px; border-radius: 8px;
+      cursor: pointer; font-size: 1rem;
+    }
+
+    /* ── Main layout ────────────────────────────────────────── */
+    .main {
+      margin-left: var(--nav-w);
+      flex: 1; min-height: 100vh;
+      padding: 32px 28px 48px;
+      position: relative; z-index: 1;
+    }
+
+    /* ── Sections ───────────────────────────────────────────── */
+    .section { display: none; }
+    .section.active { display: block; }
+
+    /* ── Page heading ───────────────────────────────────────── */
+    .page-header { margin-bottom: 28px; }
+    .page-header h1 { font-size: 1.55rem; font-weight: 700; letter-spacing: -.03em; }
+    .page-header p  { color: var(--muted2); font-size: 0.9rem; margin-top: 4px; }
+    .badge-privacy {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 0.72rem; color: var(--green); background: var(--green-soft);
+      border: 1px solid rgba(52,211,153,0.2);
+      border-radius: 99px; padding: 3px 10px; margin-top: 8px;
+    }
+
+    /* ── Grid helpers ───────────────────────────────────────── */
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr);  gap: 18px; }
+    .grid-2-1 { display: grid; grid-template-columns: 2fr 1fr; gap: 18px; }
+
+    /* ── Stat cards ─────────────────────────────────────────── */
+    .stat-card { padding: 20px 22px; }
+    .stat-label { font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+    .stat-value { font-size: 1.8rem; font-weight: 700; margin: 6px 0 2px; line-height: 1; }
+    .stat-meta  { font-size: 0.8rem; color: var(--muted2); }
+    .stat-icon  {
+      width: 38px; height: 38px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; margin-bottom: 12px;
+    }
+    .icon-glow   { background: var(--glow-soft);  box-shadow: 0 0 12px var(--glow-soft); }
+    .icon-accent { background: var(--accent-soft); }
+    .icon-green  { background: var(--green-soft);  }
+    .icon-amber  { background: var(--amber-soft);  }
+
+    .card-title   { font-size: 0.82rem; font-weight: 600; color: var(--muted2); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 14px; }
+    .card-padding { padding: 22px; }
+
+    /* ── Upcoming sessions ──────────────────────────────────── */
+    .session-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px; border-radius: 12px;
+      border: 1px solid var(--stroke);
+      background: rgba(0,0,0,0.3);
+      margin-bottom: 10px;
+      transition: border-color 0.2s;
+    }
+    .session-item:hover { border-color: var(--stroke-glow); }
+    .session-dot {
+      width: 10px; height: 10px; border-radius: 99px; flex-shrink: 0;
+    }
+    .dot-glow   { background: var(--glow);   box-shadow: 0 0 8px var(--glow); }
+    .dot-accent { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+    .session-name { font-size: 0.88rem; font-weight: 500; }
+    .session-time { font-size: 0.78rem; color: var(--muted2); margin-top: 1px; }
+
+    /* ── Activity list ──────────────────────────────────────── */
+    .activity-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--stroke);
+      font-size: 0.85rem; color: var(--muted2);
+    }
+    .activity-item:last-child { border-bottom: none; }
+    .activity-icon { font-size: 1rem; opacity: .7; }
+    .activity-time { margin-left: auto; font-size: 0.75rem; color: var(--muted); white-space: nowrap; }
+
+    /* ── Breathing module ───────────────────────────────────── */
+    .breath-center { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px 0 24px; }
+    .breath-ring-wrap {
+      width: 180px; height: 180px; position: relative;
+      margin-bottom: 28px;
+    }
+    .breath-ring {
+      width: 100%; height: 100%; border-radius: 999px;
+      border: 2px solid rgba(62,240,255,0.25);
+      background: radial-gradient(circle at 50% 50%, rgba(62,240,255,0.06) 0%, transparent 70%);
+      box-shadow: 0 0 40px rgba(62,240,255,0.15), inset 0 0 30px rgba(62,240,255,0.05);
+      animation: breathe 8s ease-in-out infinite;
+    }
+    .breath-pulse {
+      position: absolute; inset: 20px; border-radius: 999px;
+      background: radial-gradient(circle at 50%, rgba(62,240,255,0.12) 0%, transparent 70%);
+      animation: breathe-inner 8s ease-in-out infinite;
+    }
+    .breath-label  { font-size: 1.6rem; font-weight: 700; color: var(--glow); letter-spacing: -.02em; }
+    .breath-count  { font-size: 2.4rem; font-weight: 800; margin: 6px 0 2px; }
+    .breath-phase  { font-size: 0.85rem; color: var(--muted2); }
+    .breath-controls { display: flex; gap: 10px; margin-top: 20px; }
+    .breath-progress {
+      width: 100%; height: 4px; border-radius: 99px;
+      background: var(--stroke);
+      margin-top: 24px; overflow: hidden;
+    }
+    .breath-progress-bar {
+      height: 100%; border-radius: 99px;
+      background: linear-gradient(90deg, var(--glow), var(--accent));
+      animation: progress 8s linear infinite;
+    }
+
+    @keyframes breathe {
+      0%, 100% { transform: scale(1);    box-shadow: 0 0 40px rgba(62,240,255,0.15), inset 0 0 30px rgba(62,240,255,0.05); }
+      37.5%    { transform: scale(1.28); box-shadow: 0 0 80px rgba(62,240,255,0.3),  inset 0 0 50px rgba(62,240,255,0.1);  }
+      62.5%    { transform: scale(1.28); box-shadow: 0 0 80px rgba(62,240,255,0.3),  inset 0 0 50px rgba(62,240,255,0.1);  }
+    }
+    @keyframes breathe-inner {
+      0%, 100% { transform: scale(.8);  opacity: .4; }
+      37.5%    { transform: scale(1.1); opacity: 1;  }
+      62.5%    { transform: scale(1.1); opacity: 1;  }
+    }
+    @keyframes progress {
+      0%   { width: 0%; }
+      100% { width: 100%; }
+    }
+
+    .breath-timer-row {
+      display: flex; gap: 10px; width: 100%; margin-top: 16px;
+    }
+    .breath-phase-card {
+      flex: 1; text-align: center; padding: 12px 8px;
+      border-radius: 12px; border: 1px solid var(--stroke);
+      background: rgba(0,0,0,0.25);
+      font-size: 0.78rem; color: var(--muted2);
+      transition: all .2s;
+    }
+    .breath-phase-card.active {
+      border-color: var(--stroke-glow); background: var(--glow-soft);
+      color: var(--glow);
+    }
+    .breath-phase-card .phase-label { font-weight: 600; display: block; }
+    .breath-phase-card .phase-sec   { font-size: 1.2rem; font-weight: 700; margin-top: 4px; color: var(--text); }
+
+    .techniques { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+    .technique-card {
+      padding: 14px 16px; border-radius: 12px;
+      border: 1px solid var(--stroke); background: rgba(0,0,0,0.25);
+      cursor: pointer; transition: all .2s;
+    }
+    .technique-card:hover, .technique-card.active {
+      border-color: var(--stroke-glow); background: var(--glow-soft);
+    }
+    .technique-card:hover .technique-name, .technique-card.active .technique-name { color: var(--glow); }
+    .technique-name { font-size: 0.9rem; font-weight: 500; }
+    .technique-desc { font-size: 0.78rem; color: var(--muted2); margin-top: 3px; }
+    .technique-tag  {
+      display: inline-block; font-size: 0.68rem; padding: 2px 8px;
+      border-radius: 99px; margin-top: 6px;
+      background: var(--glow-soft); color: var(--glow);
+      border: 1px solid rgba(62,240,255,0.2);
+    }
+
+    /* ── Booking ────────────────────────────────────────────── */
+    .day-picker { display: flex; gap: 8px; margin-bottom: 18px; overflow-x: auto; padding-bottom: 4px; }
+    .day-btn {
+      flex-shrink: 0; text-align: center; padding: 10px 14px;
+      border-radius: 12px; border: 1px solid var(--stroke);
+      background: rgba(0,0,0,0.3); cursor: pointer;
+      transition: all .2s;
+    }
+    .day-btn:hover { border-color: var(--stroke-glow); }
+    .day-btn.active { background: var(--glow-soft); border-color: var(--stroke-glow); color: var(--glow); }
+    .day-name { font-size: 0.72rem; color: var(--muted); }
+    .day-num  { font-size: 1.1rem; font-weight: 700; }
+
+    .slot-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .slot-btn {
+      padding: 13px 10px; text-align: center; border-radius: 12px;
+      border: 1px solid var(--stroke); background: rgba(0,0,0,0.3);
+      cursor: pointer; transition: all .2s; font-size: 0.85rem;
+    }
+    .slot-btn:hover:not(.booked) { border-color: var(--stroke-glow); background: var(--glow-soft); color: var(--glow); }
+    .slot-btn.booked { opacity: .35; cursor: not-allowed; text-decoration: line-through; }
+    .slot-time { font-weight: 600; }
+    .slot-type { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+
+    .therapist-card {
+      display: flex; align-items: center; gap: 14px;
+      padding: 16px 18px; border-radius: 14px;
+      border: 1px solid var(--stroke); background: rgba(0,0,0,0.25);
+      margin-bottom: 12px; cursor: pointer; transition: all .2s;
+    }
+    .therapist-card:hover { border-color: var(--stroke-glow); background: var(--glow-soft); }
+    .therapist-avatar {
+      width: 44px; height: 44px; border-radius: 999px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem; flex-shrink: 0;
+      border: 1px solid var(--stroke);
+      background: rgba(0,0,0,0.3);
+    }
+    .therapist-name { font-size: 0.92rem; font-weight: 600; }
+    .therapist-spec { font-size: 0.78rem; color: var(--muted2); margin-top: 2px; }
+    .therapist-avail {
+      margin-left: auto; font-size: 0.75rem; color: var(--green);
+      background: var(--green-soft); border: 1px solid rgba(52,211,153,0.2);
+      border-radius: 99px; padding: 3px 9px; white-space: nowrap;
+    }
+
+    .booking-confirm {
+      margin-top: 20px; padding: 16px 18px; border-radius: 14px;
+      border: 1px solid rgba(52,211,153,0.25); background: var(--green-soft);
+      display: none;
+    }
+    .booking-confirm.show { display: block; }
+    .booking-confirm p { font-size: 0.88rem; color: var(--green); }
+
+    /* ── Cognitive game ─────────────────────────────────────── */
+    .game-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 18px;
+    }
+    .game-stat {
+      text-align: center; padding: 10px 16px; border-radius: 12px;
+      border: 1px solid var(--stroke); background: rgba(0,0,0,0.3);
+      min-width: 80px;
+    }
+    .game-stat-val  { font-size: 1.4rem; font-weight: 700; }
+    .game-stat-lbl  { font-size: 0.72rem; color: var(--muted); }
+    .game-stats-row { display: flex; gap: 8px; }
+
+    .tile-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 10px; margin: 0 auto; max-width: 360px;
+    }
+    .tile {
+      aspect-ratio: 1; border-radius: 12px;
+      border: 1px solid var(--stroke);
+      background: rgba(0,0,0,0.4);
+      cursor: pointer; transition: all .2s;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; user-select: none;
+    }
+    .tile:hover { border-color: rgba(255,255,255,0.15); background: rgba(255,255,255,0.03); }
+    .tile.revealed {
+      background: var(--glow-soft); border-color: var(--stroke-glow);
+      box-shadow: 0 0 16px rgba(62,240,255,0.15);
+    }
+    .tile.matched {
+      background: var(--green-soft); border-color: rgba(52,211,153,0.3);
+      box-shadow: 0 0 12px rgba(52,211,153,0.15);
+    }
+    .tile.hidden span { display: none; }
+
+    .game-controls { display: flex; gap: 10px; justify-content: center; margin-top: 20px; }
+    .game-message  { text-align: center; font-size: 0.88rem; color: var(--muted2); margin: 14px 0; min-height: 22px; }
+
+    .game-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+    .game-tab {
+      flex: 1; text-align: center; padding: 10px; border-radius: 12px;
+      border: 1px solid var(--stroke); background: rgba(0,0,0,0.3);
+      cursor: pointer; transition: all .2s; font-size: 0.85rem;
+    }
+    .game-tab:hover { border-color: var(--stroke-glow); }
+    .game-tab.active { background: var(--glow-soft); border-color: var(--stroke-glow); color: var(--glow); }
+
+    /* ── Forum ──────────────────────────────────────────────── */
+    .forum-composer {
+      padding: 20px 22px; margin-bottom: 22px;
+    }
+    .forum-input, .forum-textarea {
+      width: 100%; border-radius: 10px;
+      border: 1px solid var(--stroke); background: rgba(0,0,0,0.5);
+      color: var(--text); padding: 11px 14px;
+      font-size: 0.88rem; font-family: inherit;
+      transition: border-color .2s; resize: none;
+      outline: none;
+    }
+    .forum-input:focus, .forum-textarea:focus { border-color: var(--stroke-glow); }
+    .forum-input    { margin-bottom: 10px; }
+    .forum-textarea { display: block; }
+    .forum-footer   { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; }
+    .forum-hint     { font-size: 0.76rem; color: var(--muted); display: flex; align-items: center; gap: 5px; }
+    .forum-hint::before { content: '🔒'; font-size: .8rem; }
+
+    .post-card { padding: 18px 20px; margin-bottom: 14px; }
+    .post-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .post-anon-avatar {
+      width: 32px; height: 32px; border-radius: 999px;
+      background: linear-gradient(135deg, rgba(62,240,255,0.2) 0%, rgba(167,139,250,0.2) 100%);
+      border: 1px solid var(--stroke);
+      display: flex; align-items: center; justify-content: center;
+      font-size: .9rem;
+    }
+    .post-anon-name { font-size: 0.82rem; color: var(--muted2); }
+    .post-time      { font-size: 0.75rem; color: var(--muted); margin-left: auto; }
+    .post-title     { font-size: 0.95rem; font-weight: 600; margin-bottom: 6px; }
+    .post-body      { font-size: 0.85rem; color: var(--muted2); line-height: 1.6; }
+    .post-actions   { display: flex; gap: 14px; margin-top: 12px; }
+    .post-action    {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 0.8rem; color: var(--muted); cursor: pointer;
+      padding: 5px 10px; border-radius: 8px;
+      border: 1px solid transparent; transition: all .2s;
+    }
+    .post-action:hover { background: var(--glow-soft); border-color: var(--stroke-glow); color: var(--glow); }
+    .forum-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+    .tag {
+      font-size: 0.72rem; padding: 3px 10px; border-radius: 99px;
+      border: 1px solid var(--stroke); background: rgba(0,0,0,0.3);
+      cursor: pointer; transition: all .2s; color: var(--muted2);
+    }
+    .tag:hover, .tag.active { background: var(--glow-soft); border-color: var(--stroke-glow); color: var(--glow); }
+
+    .privacy-banner {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 16px; border-radius: 12px;
+      border: 1px solid rgba(52,211,153,0.2);
+      background: var(--green-soft); margin-bottom: 20px;
+      font-size: 0.82rem; color: var(--green);
+    }
+    .privacy-banner .pi { font-size: 1rem; }
+
+    /* ── Shared button ──────────────────────────────────────── */
+    .btn {
+      padding: 10px 18px; border-radius: 11px;
+      border: 1px solid var(--stroke); background: rgba(0,0,0,0.4);
+      color: var(--text); font-size: 0.85rem; font-family: inherit;
+      cursor: pointer; transition: all .2s; display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn:hover { border-color: var(--stroke-glow); background: var(--glow-soft); color: var(--glow); }
+    .btn.primary {
+      background: linear-gradient(135deg, rgba(62,240,255,0.15) 0%, rgba(167,139,250,0.1) 100%);
+      border-color: var(--stroke-glow); color: var(--glow);
+    }
+    .btn.primary:hover { background: linear-gradient(135deg, rgba(62,240,255,0.25) 0%, rgba(167,139,250,0.2) 100%); }
+    .btn.sm { padding: 7px 12px; font-size: 0.78rem; }
+
+    /* ── Divider ────────────────────────────────────────────── */
+    .divider { height: 1px; background: var(--stroke); margin: 20px 0; }
+
+    /* ── Scrollbar ──────────────────────────────────────────── */
+    ::-webkit-scrollbar       { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 99px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); }
+
+    /* ── Responsive ─────────────────────────────────────────── */
+    @media (max-width: 900px) {
+      .grid-3 { grid-template-columns: 1fr 1fr; }
+      .grid-2   { grid-template-columns: 1fr; }
+      .grid-2-1 { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .topbar  { display: flex; }
+      .main    { margin-left: 0; padding: 80px 16px 48px; }
+      .grid-3  { grid-template-columns: 1fr; }
+      .slot-grid { grid-template-columns: repeat(2, 1fr); }
+      .tile-grid { grid-template-columns: repeat(4, 1fr); }
+      .game-stats-row { flex-wrap: wrap; }
+    }
+
+    /* ── Sidebar overlay ────────────────────────────────────── */
+    .overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+      z-index: 99; backdrop-filter: blur(2px);
+    }
+    .overlay.show { display: block; }
+  </style>
+</head>
+<body>
+
+<!-- Mobile overlay -->
+<div class="overlay" id="overlay" onclick="closeMenu()"></div>
+
+<!-- Mobile topbar -->
+<nav class="topbar">
+  <div class="logo">
+    <div class="logo-icon">🧠</div>
+    <div><div class="logo-text">YodhaMind</div></div>
+  </div>
+  <button class="hamburger" onclick="toggleMenu()">☰</button>
+</nav>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
+  <div class="logo">
+    <div class="logo-icon">🧠</div>
+    <div>
+      <div class="logo-text">YodhaMind</div>
+      <div class="logo-sub">Mental Wellness</div>
+    </div>
+  </div>
+
+  <nav class="nav">
+    <div class="nav-item active" data-section="dashboard" onclick="navigate(this)">
+      <span class="nav-icon">⊞</span> Dashboard
+    </div>
+    <div class="nav-item" data-section="breathing" onclick="navigate(this)">
+      <span class="nav-icon">🌬</span> Breathing
+    </div>
+    <div class="nav-item" data-section="booking" onclick="navigate(this)">
+      <span class="nav-icon">📅</span> Book Session
+    </div>
+    <div class="nav-item" data-section="game" onclick="navigate(this)">
+      <span class="nav-icon">🎮</span> Cognitive Game
+    </div>
+    <div class="nav-item" data-section="forum" onclick="navigate(this)">
+      <span class="nav-icon">💬</span> Community
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-pill">
+      <div class="avatar">A</div>
+      <div>
+        <div class="user-name">Anonymous</div>
+        <div class="user-badge">Private Mode</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- Main content -->
+<main class="main">
+
+  <!-- ── DASHBOARD ──────────────────────────────────────────── -->
+  <section class="section active" id="dashboard">
+    <div class="page-header">
+      <h1>Welcome back 👋</h1>
+      <p>Your wellness journey is safe, private, and data-free.</p>
+      <span class="badge-privacy">🔒 End-to-end privacy enabled</span>
+    </div>
+
+    <!-- Stats row -->
+    <div class="grid-3">
+      <div class="glass stat-card">
+        <div class="stat-icon icon-glow">🌬</div>
+        <div class="stat-label">Breathing Today</div>
+        <div class="stat-value" style="color: var(--glow);">3</div>
+        <div class="stat-meta">sessions · 15 min total</div>
+      </div>
+      <div class="glass stat-card">
+        <div class="stat-icon icon-accent">🎮</div>
+        <div class="stat-label">Games Played</div>
+        <div class="stat-value" style="color: var(--accent);">7</div>
+        <div class="stat-meta">best score: 2450</div>
+      </div>
+      <div class="glass stat-card">
+        <div class="stat-icon icon-green">📅</div>
+        <div class="stat-label">Next Session</div>
+        <div class="stat-value" style="color: var(--green); font-size:1.2rem; padding-top:6px;">3:30 PM</div>
+        <div class="stat-meta">May 10 · 1-on-1 therapy</div>
+      </div>
+    </div>
+
+    <!-- Sessions + activity -->
+    <div class="grid-2" style="margin-top:18px;">
+      <div class="glass card-padding">
+        <div class="card-title">Upcoming Sessions</div>
+        <div class="session-item">
+          <div class="session-dot dot-glow"></div>
+          <div>
+            <div class="session-name">1-on-1 Therapy Session</div>
+            <div class="session-time">May 10 · 3:30 PM · Dr. Priya</div>
+          </div>
+        </div>
+        <div class="session-item">
+          <div class="session-dot dot-accent"></div>
+          <div>
+            <div class="session-name">Mindfulness Group</div>
+            <div class="session-time">May 12 · 5:00 PM · Group</div>
+          </div>
+        </div>
+        <div class="session-item">
+          <div class="session-dot" style="background: var(--amber); box-shadow: 0 0 8px var(--amber);"></div>
+          <div>
+            <div class="session-name">CBT Workshop</div>
+            <div class="session-time">May 15 · 2:00 PM · Dr. Arjun</div>
+          </div>
+        </div>
+        <button class="btn sm primary" style="margin-top:14px;" onclick="navigate(document.querySelector('[data-section=booking]'))">
+          + Book New Session
+        </button>
+      </div>
+
+      <div class="glass card-padding">
+        <div class="card-title">Recent Activity</div>
+        <div class="activity-item">
+          <span class="activity-icon">🌬</span>
+          Completed Box Breathing (5 min)
+          <span class="activity-time">2h ago</span>
+        </div>
+        <div class="activity-item">
+          <span class="activity-icon">🎮</span>
+          Memory Grid — Score 2450
+          <span class="activity-time">4h ago</span>
+        </div>
+        <div class="activity-item">
+          <span class="activity-icon">💬</span>
+          Posted in Community Forum
+          <span class="activity-time">Yesterday</span>
+        </div>
+        <div class="activity-item">
+          <span class="activity-icon">📅</span>
+          Booked session with Dr. Priya
+          <span class="activity-time">2 days ago</span>
+        </div>
+        <div class="activity-item">
+          <span class="activity-icon">🌬</span>
+          4-7-8 Breathing (8 min)
+          <span class="activity-time">2 days ago</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick-access modules -->
+    <div class="glass card-padding" style="margin-top:18px;">
+      <div class="card-title">Quick Access</div>
+      <div class="grid-3" style="margin-top:0;">
+        <div class="technique-card" onclick="navigate(document.querySelector('[data-section=breathing]'))">
+          <div style="font-size:1.8rem; margin-bottom:8px;">🌬</div>
+          <div class="technique-name">Start Breathing</div>
+          <div class="technique-desc">Calming guided exercises</div>
+          <span class="technique-tag">2 min · Instant calm</span>
+        </div>
+        <div class="technique-card" onclick="navigate(document.querySelector('[data-section=game]'))">
+          <div style="font-size:1.8rem; margin-bottom:8px;">🧩</div>
+          <div class="technique-name">Play Memory Grid</div>
+          <div class="technique-desc">Sharpen focus &amp; memory</div>
+          <span class="technique-tag">5 min · Cognitive boost</span>
+        </div>
+        <div class="technique-card" onclick="navigate(document.querySelector('[data-section=forum]'))">
+          <div style="font-size:1.8rem; margin-bottom:8px;">🔒</div>
+          <div class="technique-name">Anonymous Forum</div>
+          <div class="technique-desc">Share safely, no identity</div>
+          <span class="technique-tag">0 tracking · Private</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ── BREATHING ──────────────────────────────────────────── -->
+  <section class="section" id="breathing">
+    <div class="page-header">
+      <h1>Breathing Exercises</h1>
+      <p>Evidence-based techniques to reduce stress in minutes.</p>
+    </div>
+
+    <div class="grid-2-1">
+      <!-- Main animator -->
+      <div class="glass card-padding" style="text-align:center;">
+        <div class="breath-center">
+          <div class="breath-ring-wrap">
+            <div class="breath-ring"></div>
+            <div class="breath-pulse"></div>
+          </div>
+          <div class="breath-label" id="breathLabel">Inhale</div>
+          <div class="breath-count" id="breathCount">4</div>
+          <div class="breath-phase" id="breathPhaseDesc">Breathe in slowly through your nose</div>
+        </div>
+
+        <div class="breath-timer-row">
+          <div class="breath-phase-card active" id="ph-inhale">
+            <span class="phase-label">Inhale</span>
+            <span class="phase-sec" id="pc-inhale">4</span>
+          </div>
+          <div class="breath-phase-card" id="ph-hold">
+            <span class="phase-label">Hold</span>
+            <span class="phase-sec" id="pc-hold">4</span>
+          </div>
+          <div class="breath-phase-card" id="ph-exhale">
+            <span class="phase-label">Exhale</span>
+            <span class="phase-sec" id="pc-exhale">4</span>
+          </div>
+        </div>
+
+        <div class="breath-progress" style="margin-top:20px;">
+          <div class="breath-progress-bar"></div>
+        </div>
+
+        <div class="breath-controls">
+          <button class="btn" id="breathToggle" onclick="toggleBreath()">⏸ Pause</button>
+          <button class="btn" onclick="resetBreath()">↺ Reset</button>
+        </div>
+      </div>
+
+      <!-- Technique picker -->
+      <div>
+        <div class="glass card-padding">
+          <div class="card-title">Techniques</div>
+          <div class="techniques">
+            <div class="technique-card active" data-inhale="4" data-hold="4" data-exhale="4" onclick="selectTechnique(this)">
+              <div class="technique-name">Box Breathing</div>
+              <div class="technique-desc">4-4-4 · Balance &amp; focus</div>
+              <span class="technique-tag">Recommended</span>
+            </div>
+            <div class="technique-card" data-inhale="4" data-hold="7" data-exhale="8" onclick="selectTechnique(this)">
+              <div class="technique-name">4-7-8 Breathing</div>
+              <div class="technique-desc">4-7-8 · Deep relaxation</div>
+              <span class="technique-tag">Sleep aid</span>
+            </div>
+            <div class="technique-card" data-inhale="5" data-hold="0" data-exhale="5" onclick="selectTechnique(this)">
+              <div class="technique-name">Diaphragmatic</div>
+              <div class="technique-desc">5-0-5 · Reduce anxiety</div>
+              <span class="technique-tag">Stress relief</span>
+            </div>
+            <div class="technique-card" data-inhale="6" data-hold="0" data-exhale="6" onclick="selectTechnique(this)">
+              <div class="technique-name">Coherence Breathing</div>
+              <div class="technique-desc">6-0-6 · Heart rhythm</div>
+              <span class="technique-tag">HRV boost</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ── BOOKING ────────────────────────────────────────────── -->
+  <section class="section" id="booking">
+    <div class="page-header">
+      <h1>Book a Session</h1>
+      <p>Choose a therapist, pick a slot. Your identity stays private.</p>
+    </div>
+
+    <div class="grid-2">
+      <!-- Slot picker -->
+      <div class="glass card-padding">
+        <div class="card-title">Available Slots — May 2025</div>
+
+        <div class="day-picker" id="dayPicker">
+          <div class="day-btn active" data-day="0" onclick="selectDay(this)"><div class="day-name">Mon</div><div class="day-num">5</div></div>
+          <div class="day-btn" data-day="1" onclick="selectDay(this)"><div class="day-name">Tue</div><div class="day-num">6</div></div>
+          <div class="day-btn" data-day="2" onclick="selectDay(this)"><div class="day-name">Wed</div><div class="day-num">7</div></div>
+          <div class="day-btn" data-day="3" onclick="selectDay(this)"><div class="day-name">Thu</div><div class="day-num">8</div></div>
+          <div class="day-btn" data-day="4" onclick="selectDay(this)"><div class="day-name">Fri</div><div class="day-num">9</div></div>
+          <div class="day-btn" data-day="5" onclick="selectDay(this)"><div class="day-name">Sat</div><div class="day-num">10</div></div>
+          <div class="day-btn" data-day="6" onclick="selectDay(this)"><div class="day-name">Sun</div><div class="day-num">11</div></div>
+        </div>
+
+        <div class="slot-grid" id="slotGrid">
+          <!-- populated by JS -->
+        </div>
+
+        <div class="booking-confirm" id="bookingConfirm">
+          <p>✅ Session booked! A secure, anonymous confirmation has been sent.</p>
+        </div>
+      </div>
+
+      <!-- Therapist list -->
+      <div>
+        <div class="glass card-padding">
+          <div class="card-title">Therapists</div>
+          <div class="therapist-card" onclick="selectTherapist(this)">
+            <div class="therapist-avatar">👩‍⚕️</div>
+            <div>
+              <div class="therapist-name">Dr. Priya Sharma</div>
+              <div class="therapist-spec">Anxiety · CBT · Mindfulness</div>
+            </div>
+            <span class="therapist-avail">Available</span>
+          </div>
+          <div class="therapist-card" onclick="selectTherapist(this)">
+            <div class="therapist-avatar">👨‍⚕️</div>
+            <div>
+              <div class="therapist-name">Dr. Arjun Mehta</div>
+              <div class="therapist-spec">Trauma · Depression · EMDR</div>
+            </div>
+            <span class="therapist-avail">Available</span>
+          </div>
+          <div class="therapist-card" onclick="selectTherapist(this)">
+            <div class="therapist-avatar">🧑‍⚕️</div>
+            <div>
+              <div class="therapist-name">Dr. Kavya Nair</div>
+              <div class="therapist-spec">Stress · Sleep · Burnout</div>
+            </div>
+            <span class="therapist-avail" style="color:var(--amber); background:var(--amber-soft); border-color:rgba(251,191,36,.2);">Busy Today</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ── COGNITIVE GAME ─────────────────────────────────────── -->
+  <section class="section" id="game">
+    <div class="page-header">
+      <h1>Cognitive Games</h1>
+      <p>Sharpen focus, memory, and clarity — one game at a time.</p>
+    </div>
+
+    <div class="grid-2">
+      <!-- Memory Grid -->
+      <div class="glass card-padding">
+        <div class="game-header">
+          <div class="card-title" style="margin-bottom:0;">Memory Grid</div>
+          <div class="game-stats-row">
+            <div class="game-stat">
+              <div class="game-stat-val" id="gameScore">0</div>
+              <div class="game-stat-lbl">Score</div>
+            </div>
+            <div class="game-stat">
+              <div class="game-stat-val" id="gameMoves">0</div>
+              <div class="game-stat-lbl">Moves</div>
+            </div>
+            <div class="game-stat">
+              <div class="game-stat-val" id="gameTimer">60</div>
+              <div class="game-stat-lbl">Sec</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tile-grid" id="tileGrid"><!-- populated by JS --></div>
+
+        <div class="game-message" id="gameMessage">Tap two tiles to find matching pairs.</div>
+
+        <div class="game-controls">
+          <button class="btn primary" onclick="startGame()">▶ New Game</button>
+          <button class="btn" onclick="startGame()">↺ Restart</button>
+        </div>
+      </div>
+
+      <!-- Game info + other games -->
+      <div style="display:flex; flex-direction:column; gap:18px;">
+        <div class="glass card-padding">
+          <div class="card-title">Other Games</div>
+          <div class="game-tabs">
+            <div class="game-tab active">🃏 Memory</div>
+            <div class="game-tab">🔢 Pattern</div>
+            <div class="game-tab">🧩 Sequence</div>
+          </div>
+          <div class="technique-desc" style="margin-bottom:14px;">
+            Flip tiles and match pairs. Improves short-term memory and concentration.
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <span class="tag active">Easy</span>
+            <span class="tag">Medium</span>
+            <span class="tag">Hard</span>
+          </div>
+        </div>
+
+        <div class="glass card-padding">
+          <div class="card-title">Personal Best</div>
+          <div class="activity-item">
+            <span class="activity-icon">🏆</span> Memory Grid
+            <span class="activity-time" style="color:var(--glow);">2450 pts</span>
+          </div>
+          <div class="activity-item">
+            <span class="activity-icon">⚡</span> Pattern Match
+            <span class="activity-time" style="color:var(--accent);">1890 pts</span>
+          </div>
+          <div class="activity-item">
+            <span class="activity-icon">🧩</span> Sequence
+            <span class="activity-time" style="color:var(--green);">3100 pts</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ── FORUM ──────────────────────────────────────────────── -->
+  <section class="section" id="forum">
+    <div class="page-header">
+      <h1>Anonymous Community</h1>
+      <p>Share what you feel. No names. No IDs. No tracking.</p>
+    </div>
+
+    <div class="privacy-banner">
+      <span class="pi">🔒</span>
+      All posts are fully anonymous. We never store IP addresses, device IDs, or any identifying information.
+    </div>
+
+    <div class="grid-2-1">
+      <!-- Posts -->
+      <div>
+        <!-- Composer -->
+        <div class="glass forum-composer">
+          <div class="card-title">Share Anonymously</div>
+          <input class="forum-input" type="text" placeholder="What's on your mind? (title)..." />
+          <textarea class="forum-textarea" rows="4" placeholder="Write your thoughts here... This is a safe, judgment-free space."></textarea>
+          <div class="forum-tags" style="margin-top:10px; margin-bottom:0;">
+            <span class="tag active">#anxiety</span>
+            <span class="tag">#exams</span>
+            <span class="tag">#sleep</span>
+            <span class="tag">#relationships</span>
+            <span class="tag">#burnout</span>
+            <span class="tag"># other</span>
+          </div>
+          <div class="forum-footer">
+            <span class="forum-hint">Your identity is completely hidden</span>
+            <button class="btn primary" onclick="submitPost()">Post Anonymously</button>
+          </div>
+        </div>
+
+        <!-- Post feed -->
+        <div id="postFeed">
+          <div class="glass post-card">
+            <div class="post-header">
+              <div class="post-anon-avatar">👤</div>
+              <div class="post-anon-name">Anon #4821</div>
+              <div class="post-time">2h ago</div>
+            </div>
+            <div class="post-title">Feeling overwhelmed with exams — is this normal?</div>
+            <div class="post-body">I've been having panic attacks before every exam. Can't sleep, can't eat. Anyone else going through this? What helped you?</div>
+            <div class="post-actions">
+              <div class="post-action">🤍 24</div>
+              <div class="post-action">💬 8 replies</div>
+              <div class="post-action">🏷 #exams #anxiety</div>
+            </div>
+          </div>
+
+          <div class="glass post-card">
+            <div class="post-header">
+              <div class="post-anon-avatar">👤</div>
+              <div class="post-anon-name">Anon #3017</div>
+              <div class="post-time">5h ago</div>
+            </div>
+            <div class="post-title">Sleep schedule completely destroyed</div>
+            <div class="post-body">Been sleeping at 4 AM and waking up at 2 PM for months. Tried melatonin, nothing works. The breathing exercises here helped a bit. Anyone have other tips?</div>
+            <div class="post-actions">
+              <div class="post-action">🤍 41</div>
+              <div class="post-action">💬 15 replies</div>
+              <div class="post-action">🏷 #sleep</div>
+            </div>
+          </div>
+
+          <div class="glass post-card">
+            <div class="post-header">
+              <div class="post-anon-avatar">👤</div>
+              <div class="post-anon-name">Anon #2209</div>
+              <div class="post-time">Yesterday</div>
+            </div>
+            <div class="post-title">The memory game actually calmed my anxiety</div>
+            <div class="post-body">I was spiraling before a presentation and opened the memory game. 10 minutes later my mind was clearer. Small thing but wanted to share. The focus it takes really grounds me.</div>
+            <div class="post-actions">
+              <div class="post-action">🤍 67</div>
+              <div class="post-action">💬 11 replies</div>
+              <div class="post-action">🏷 #anxiety</div>
+            </div>
+          </div>
+
+          <div class="glass post-card">
+            <div class="post-header">
+              <div class="post-anon-avatar">👤</div>
+              <div class="post-anon-name">Anon #5574</div>
+              <div class="post-time">2 days ago</div>
+            </div>
+            <div class="post-title">How do I tell my parents I need therapy?</div>
+            <div class="post-body">My family doesn't really believe in mental health. I've been booking sessions here without telling them. Anyone navigated this situation before?</div>
+            <div class="post-actions">
+              <div class="post-action">🤍 89</div>
+              <div class="post-action">💬 22 replies</div>
+              <div class="post-action">🏷 #relationships</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <div style="display:flex; flex-direction:column; gap:18px;">
+        <div class="glass card-padding">
+          <div class="card-title">Filter by Topic</div>
+          <div class="forum-tags" style="flex-direction:column; gap:8px; flex-wrap:nowrap;">
+            <div class="tag" style="border-radius:10px; padding:8px 12px; text-align:left;">🧠 All Posts</div>
+            <div class="tag active" style="border-radius:10px; padding:8px 12px; text-align:left;">😰 Anxiety</div>
+            <div class="tag" style="border-radius:10px; padding:8px 12px; text-align:left;">📚 Exams &amp; Study</div>
+            <div class="tag" style="border-radius:10px; padding:8px 12px; text-align:left;">🌙 Sleep</div>
+            <div class="tag" style="border-radius:10px; padding:8px 12px; text-align:left;">❤️ Relationships</div>
+            <div class="tag" style="border-radius:10px; padding:8px 12px; text-align:left;">🔥 Burnout</div>
+          </div>
+        </div>
+
+        <div class="glass card-padding">
+          <div class="card-title">Community Rules</div>
+          <div style="display:flex; flex-direction:column; gap:8px; font-size:0.82rem; color:var(--muted2);">
+            <div>✅ Be kind and supportive</div>
+            <div>✅ No identifying information</div>
+            <div>✅ No harmful advice</div>
+            <div>✅ Respect all experiences</div>
+            <div style="color:var(--muted); margin-top:4px; font-size:.76rem;">Posts are reviewed by our anonymous moderation team.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+  // ── Navigation ─────────────────────────────────────────────
+  function navigate(el) {
+    if (!el) return;
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    const section = el.dataset.section || el.dataset?.section;
+    const navEl = el.classList.contains('nav-item') ? el : document.querySelector(`[data-section="${section}"]`);
+    if (navEl) navEl.classList.add('active');
+    const target = el.dataset.section ? document.getElementById(el.dataset.section) : null;
+    if (target) target.classList.add('active');
+    closeMenu();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // Quick-access cards use onclick="navigate(document.querySelector(...))"
+  // so they already have data-section set — but they aren't nav-items.
+  // Patch: make navigate also work for non-nav-items with data-section
+  function navigateTo(sectionId) {
+    document.querySelectorAll('.nav-item').forEach(n => {
+      n.classList.toggle('active', n.dataset.section === sectionId);
+    });
+    document.querySelectorAll('.section').forEach(s => {
+      s.classList.toggle('active', s.id === sectionId);
+    });
+    closeMenu();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // Override quick-access cards
+  document.querySelectorAll('.technique-card[onclick]').forEach(card => {
+    const match = card.getAttribute('onclick').match(/data-section=(\w+)/);
+    if (match) {
+      const sec = match[1];
+      card.setAttribute('onclick', `navigateTo('${sec}')`);
+    }
+  });
+
+  // Fix the nav items (they use navigate(this) which works for nav-items)
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', function() {
+      navigateTo(this.dataset.section);
+    });
+  });
+
+  // "Book New Session" button
+  document.querySelector('.btn.sm.primary')?.addEventListener('click', () => navigateTo('booking'));
+
+  // ── Mobile menu ────────────────────────────────────────────
+  function toggleMenu() {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('overlay').classList.toggle('show');
+  }
+  function closeMenu() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('overlay').classList.remove('show');
+  }
+
+  // ── Breathing timer ────────────────────────────────────────
+  let breathState  = { phase: 'inhale', count: 4, running: true };
+  let breathConfig = { inhale: 4, hold: 4, exhale: 4 };
+  let breathInterval = null;
+
+  const phases = [
+    { key: 'inhale', label: 'Inhale', desc: 'Breathe in slowly through your nose',    elId: 'ph-inhale' },
+    { key: 'hold',   label: 'Hold',   desc: 'Hold your breath gently',                 elId: 'ph-hold'   },
+    { key: 'exhale', label: 'Exhale', desc: 'Breathe out slowly through your mouth',   elId: 'ph-exhale' },
+  ];
+
+  function getPhaseIdx() { return phases.findIndex(p => p.key === breathState.phase); }
+
+  function updateBreathUI() {
+    const p = phases.find(x => x.key === breathState.phase);
+    document.getElementById('breathLabel').textContent = p.label;
+    document.getElementById('breathCount').textContent = breathState.count;
+    document.getElementById('breathPhaseDesc').textContent = p.desc;
+    phases.forEach(x => {
+      document.getElementById(x.elId).classList.toggle('active', x.key === breathState.phase);
+    });
+    // Update phase duration displays
+    document.getElementById('pc-inhale').textContent = breathConfig.inhale;
+    document.getElementById('pc-hold').textContent   = breathConfig.hold || '—';
+    document.getElementById('pc-exhale').textContent = breathConfig.exhale;
+  }
+
+  function breathTick() {
+    if (!breathState.running) return;
+    breathState.count--;
+    if (breathState.count <= 0) {
+      let idx = getPhaseIdx();
+      // skip hold if 0
+      let next;
+      do {
+        idx = (idx + 1) % 3;
+        next = phases[idx];
+      } while (breathConfig[next.key] === 0);
+      breathState.phase = next.key;
+      breathState.count = breathConfig[next.key];
+    }
+    updateBreathUI();
+  }
+
+  function startBreathTimer() {
+    if (breathInterval) clearInterval(breathInterval);
+    breathInterval = setInterval(breathTick, 1000);
+  }
+
+  function toggleBreath() {
+    breathState.running = !breathState.running;
+    document.getElementById('breathToggle').textContent = breathState.running ? '⏸ Pause' : '▶ Resume';
+  }
+
+  function resetBreath() {
+    breathState = { phase: 'inhale', count: breathConfig.inhale, running: true };
+    document.getElementById('breathToggle').textContent = '⏸ Pause';
+    updateBreathUI();
+  }
+
+  function selectTechnique(el) {
+    document.querySelectorAll('.technique-card').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    breathConfig = {
+      inhale: +el.dataset.inhale,
+      hold:   +el.dataset.hold,
+      exhale: +el.dataset.exhale,
+    };
+    resetBreath();
+  }
+
+  // init
+  breathState.count = breathConfig.inhale;
+  updateBreathUI();
+  startBreathTimer();
+
+  // ── Booking slots ──────────────────────────────────────────
+  const slotData = [
+    ['9:00 AM','10:30 AM','12:00 PM','1:30 PM','3:00 PM','4:30 PM'],
+    ['9:30 AM','11:00 AM','2:00 PM','3:30 PM','5:00 PM'],
+    ['10:00 AM','11:30 AM','1:00 PM','3:00 PM','4:00 PM','5:30 PM'],
+    ['9:00 AM','10:30 AM','2:30 PM','4:00 PM'],
+    ['8:30 AM','10:00 AM','11:30 AM','1:00 PM','3:30 PM'],
+    ['10:00 AM','12:00 PM','2:00 PM','4:00 PM'],
+    ['11:00 AM','1:00 PM','3:00 PM'],
+  ];
+  const bookedSlots = new Set(['1:30 PM_0', '3:30 PM_1', '11:00 AM_2']);
+
+  function renderSlots(dayIdx) {
+    const grid = document.getElementById('slotGrid');
+    const slots = slotData[dayIdx] || [];
+    grid.innerHTML = slots.map(t => {
+      const key = `${t}_${dayIdx}`;
+      const booked = bookedSlots.has(key);
+      return `<div class="slot-btn${booked ? ' booked' : ''}" onclick="bookSlot(this,'${key}')">
+        <div class="slot-time">${t}</div>
+        <div class="slot-type">${booked ? 'Booked' : '1-on-1'}</div>
+      </div>`;
+    }).join('');
+  }
+
+  function selectDay(el) {
+    document.querySelectorAll('.day-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('bookingConfirm').classList.remove('show');
+    renderSlots(+el.dataset.day);
+  }
+
+  function bookSlot(el, key) {
+    if (el.classList.contains('booked')) return;
+    document.querySelectorAll('.slot-btn:not(.booked)').forEach(b => {
+      b.classList.remove('slot-selected');
+      b.style.borderColor = '';
+      b.style.background  = '';
+    });
+    el.style.borderColor = 'var(--stroke-glow)';
+    el.style.background  = 'var(--glow-soft)';
+    el.style.color       = 'var(--glow)';
+    document.getElementById('bookingConfirm').classList.add('show');
+  }
+
+  function selectTherapist(el) {
+    document.querySelectorAll('.therapist-card').forEach(c => {
+      c.style.borderColor = '';
+      c.style.background  = '';
+    });
+    el.style.borderColor = 'var(--stroke-glow)';
+    el.style.background  = 'var(--glow-soft)';
+  }
+
+  renderSlots(0);
+
+  // ── Memory game ────────────────────────────────────────────
+  const EMOJIS = ['🌸','🎯','⚡','🦋','🎵','🌙','🔥','🎨'];
+  let gameCards = [], revealed = [], matched = new Set(), score = 0, moves = 0, timer = 60, gameRunning = false, timerInterval = null;
+
+  function shuffle(arr) {
+    const a = [...arr]; for (let i = a.length-1; i>0; i--) { const j = Math.random()*i|0; [a[i],a[j]] = [a[j],a[i]]; } return a;
+  }
+
+  function startGame() {
+    clearInterval(timerInterval);
+    const deck = shuffle([...EMOJIS, ...EMOJIS]);
+    gameCards = deck;
+    revealed  = [];
+    matched   = new Set();
+    score     = 0; moves = 0; timer = 60; gameRunning = true;
+    renderGrid();
+    updateGameUI();
+    document.getElementById('gameMessage').textContent = 'Tap two tiles to find matching pairs.';
+    timerInterval = setInterval(() => {
+      if (!gameRunning) return;
+      timer--;
+      document.getElementById('gameTimer').textContent = timer;
+      if (timer <= 0) { gameRunning = false; clearInterval(timerInterval); document.getElementById('gameMessage').textContent = `Time's up! Score: ${score}`; }
+    }, 1000);
+  }
+
+  function renderGrid() {
+    const grid = document.getElementById('tileGrid');
+    grid.innerHTML = gameCards.map((e, i) => {
+      const cls = matched.has(i) ? 'tile matched' : revealed.includes(i) ? 'tile revealed' : 'tile hidden';
+      return `<div class="${cls}" onclick="flipTile(${i})"><span>${e}</span></div>`;
+    }).join('');
+  }
+
+  function updateGameUI() {
+    document.getElementById('gameScore').textContent = score;
+    document.getElementById('gameMoves').textContent = moves;
+  }
+
+  function flipTile(i) {
+    if (!gameRunning || matched.has(i) || revealed.includes(i) || revealed.length >= 2) return;
+    revealed.push(i);
+    renderGrid();
+    if (revealed.length === 2) {
+      moves++;
+      updateGameUI();
+      const [a, b] = revealed;
+      if (gameCards[a] === gameCards[b]) {
+        matched.add(a); matched.add(b);
+        score += 100;
+        updateGameUI();
+        revealed = [];
+        if (matched.size === gameCards.length) {
+          gameRunning = false; clearInterval(timerInterval);
+          document.getElementById('gameMessage').textContent = `🎉 Completed in ${moves} moves! Score: ${score}`;
+        } else {
+          document.getElementById('gameMessage').textContent = '✅ Match!';
+          setTimeout(() => { document.getElementById('gameMessage').textContent = 'Keep going!'; }, 700);
+        }
+        renderGrid();
+      } else {
+        document.getElementById('gameMessage').textContent = '❌ Not a match — try again!';
+        setTimeout(() => { revealed = []; renderGrid(); document.getElementById('gameMessage').textContent = 'Tap two tiles to find matching pairs.'; }, 900);
+      }
+    }
+  }
+
+  // Auto-start a game
+  startGame();
+
+  // ── Forum new post ─────────────────────────────────────────
+  function submitPost() {
+    const titleEl = document.querySelector('.forum-input');
+    const bodyEl  = document.querySelector('.forum-textarea');
+    const title = titleEl.value.trim();
+    const body  = bodyEl.value.trim();
+    if (!title || !body) { alert('Please add a title and message.'); return; }
+
+    const anonNum = Math.floor(1000 + Math.random() * 9000);
+    const now = 'Just now';
+    const card = document.createElement('div');
+    card.className = 'glass post-card';
+    card.innerHTML = `
+      <div class="post-header">
+        <div class="post-anon-avatar">👤</div>
+        <div class="post-anon-name">Anon #${anonNum}</div>
+        <div class="post-time">${now}</div>
+      </div>
+      <div class="post-title">${title}</div>
+      <div class="post-body">${body}</div>
+      <div class="post-actions">
+        <div class="post-action">🤍 0</div>
+        <div class="post-action">💬 0 replies</div>
+      </div>`;
+    const feed = document.getElementById('postFeed');
+    feed.insertBefore(card, feed.firstChild);
+    titleEl.value = '';
+    bodyEl.value  = '';
+  }
+</script>
+</body>
+</html>
