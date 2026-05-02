@@ -879,33 +879,33 @@
   </a>
 
   <span class="nav-section-label">Overview</span>
-  <button class="nav-link active" onclick="switchView('dashboard', this)">
+  <button class="nav-link active" data-view="dashboard" onclick="switchView('dashboard', this)">
     <span class="nav-icon">⊞</span> Dashboard
   </button>
-  <button class="nav-link" onclick="switchView('wellness', this)">
+  <button class="nav-link" data-view="wellness" onclick="switchView('wellness', this)">
     <span class="nav-icon">◎</span> Wellness
   </button>
-  <button class="nav-link" onclick="switchView('booking', this)">
+  <button class="nav-link" data-view="booking" onclick="switchView('booking', this)">
     <span class="nav-icon">📅</span> Booking
   </button>
 
   <hr class="nav-divider" />
 
   <span class="nav-section-label">Modules</span>
-  <button class="nav-link" onclick="switchView('breathing', this)">
+  <button class="nav-link" data-view="breathing" onclick="switchView('breathing', this)">
     <span class="nav-icon">💨</span> Breathing
   </button>
-  <button class="nav-link" onclick="switchView('games', this)">
+  <button class="nav-link" data-view="games" onclick="switchView('games', this)">
     <span class="nav-icon">🧩</span> Cognitive Games
   </button>
 
   <hr class="nav-divider" />
 
   <span class="nav-section-label">Community</span>
-  <button class="nav-link" onclick="switchView('forum', this)">
+  <button class="nav-link" data-view="forum" onclick="switchView('forum', this)">
     <span class="nav-icon">💬</span> Anonymous Forum
   </button>
-  <button class="nav-link" onclick="switchView('moderation', this)">
+  <button class="nav-link" data-view="moderation" onclick="switchView('moderation', this)">
     <span class="nav-icon">🛡</span> Moderation
     <span class="tag badge-danger" style="background:rgba(255,92,92,0.15);color:#ff5c5c;">3</span>
   </button>
@@ -1371,7 +1371,9 @@
     <div class="card forum-composer">
       <div class="input-row">
         <input class="forum-input" id="postTitle" placeholder="Title (3–120 chars)" maxlength="120" />
+        <div id="titleError" style="display:none;font-size:0.73rem;color:var(--danger);margin-top:2px;">Title must be at least 3 characters.</div>
         <textarea class="forum-textarea" id="postBody" rows="4" placeholder="Share your thoughts… (10–3000 chars)" maxlength="3000"></textarea>
+        <div id="bodyError" style="display:none;font-size:0.73rem;color:var(--danger);margin-top:2px;">Message must be at least 10 characters.</div>
       </div>
       <div class="forum-footer-row">
         <span class="privacy-note">🔒 100% anonymous · no IP logged</span>
@@ -1421,18 +1423,16 @@ function switchView(name, triggerEl) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
 
   if (triggerEl) {
-    // determine if sidebar or tab
+    // determine if sidebar nav-link or tab-btn, then sync both
     if (triggerEl.classList.contains('nav-link')) {
       triggerEl.classList.add('active');
-      const view = name;
       document.querySelectorAll('.tab-btn').forEach(b => {
-        if (b.dataset.view === view) b.classList.add('active');
+        if (b.dataset.view === name) b.classList.add('active');
       });
     } else {
       triggerEl.classList.add('active');
       document.querySelectorAll('.sidebar .nav-link').forEach(l => {
-        if (l.getAttribute('onclick') && l.getAttribute('onclick').includes("'" + name + "'"))
-          l.classList.add('active');
+        if (l.dataset.view === name) l.classList.add('active');
       });
     }
   }
@@ -1621,16 +1621,36 @@ function renderPosts() {
 }
 
 function submitPost() {
-  const titleEl = document.getElementById('postTitle');
-  const bodyEl  = document.getElementById('postBody');
+  const titleEl     = document.getElementById('postTitle');
+  const bodyEl      = document.getElementById('postBody');
+  const titleErrEl  = document.getElementById('titleError');
+  const bodyErrEl   = document.getElementById('bodyError');
   const title = (titleEl.value || '').trim();
   const body  = (bodyEl.value  || '').trim();
 
-  if (title.length < 3)  { titleEl.focus(); titleEl.style.borderColor='var(--danger)'; return; }
-  if (body.length < 10)  { bodyEl.focus();  bodyEl.style.borderColor='var(--danger)'; return; }
+  let valid = true;
 
-  titleEl.style.borderColor = '';
-  bodyEl.style.borderColor  = '';
+  if (title.length < 3) {
+    titleEl.style.borderColor = 'var(--danger)';
+    if (titleErrEl) titleErrEl.style.display = 'block';
+    titleEl.focus();
+    valid = false;
+  } else {
+    titleEl.style.borderColor = '';
+    if (titleErrEl) titleErrEl.style.display = 'none';
+  }
+
+  if (body.length < 10) {
+    bodyEl.style.borderColor = 'var(--danger)';
+    if (bodyErrEl) bodyErrEl.style.display = 'block';
+    if (valid) bodyEl.focus();
+    valid = false;
+  } else {
+    bodyEl.style.borderColor = '';
+    if (bodyErrEl) bodyErrEl.style.display = 'none';
+  }
+
+  if (!valid) return;
 
   posts.unshift({ id: 'p' + Date.now(), title, body, time: 'just now', likes: 0, replies: 0 });
   titleEl.value = '';
